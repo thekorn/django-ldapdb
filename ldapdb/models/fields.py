@@ -31,7 +31,7 @@
 #
 
 import django
-from django.db.models import fields, SubfieldBase
+from django.db.models import fields
 
 from ldapdb import escape_ldap_filter
 
@@ -158,12 +158,6 @@ class FloatField(fields.FloatField):
 
 
 class ListField(fields.Field):
-    
-    if django.VERSION[:2] < (1, 8):
-        __metaclass__ = SubfieldBase
-        # TODO: SubfieldBase was deprecated in 1.8, will be removed in 1.10.
-        # Switch to using Field.from_db_value() per docs.
-        # https://docs.djangoproject.com/en/1.8/howto/custom-model-fields/#converting-values-to-python-objects
 
     def from_ldap(self, value, connection):
         return [x.decode(connection.charset) for x in value]
@@ -235,3 +229,9 @@ class DateField(fields.DateField):
         if lookup_type in ('exact',):
             return value
         raise TypeError("DateField has invalid lookup: %s" % lookup_type)
+
+
+# Handle the deprecation of SubfieldBase
+if django.VERSION[:2] < (1, 8):
+    from django.db.models import SubfieldBase
+    ListField.__metaclass__ = SubfieldBase
